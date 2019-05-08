@@ -1,0 +1,305 @@
+
+
+Code to determine overlap between CTCF and enhancer segments (sub overlap)
+
+ Input Tables: totals (for each variant/gene, numbers of CTCF and enhancers), CTCF output (CTCF regions within range of genomic regions of interest), enhancers output (enhancer regions within genomic regions of interest), 
+
+Output Tables: fini (final table containing a list of overlapping enhancers and CTCF regions with overlap code) 
+
+By convention, 5’ is “left” and 3’ is “right”
+
+
+Overlap codes
+1 – enhancer segment entirely contained in CTCF segment
+2 – CTCF segment entirely contained in enhancer segment
+3 – enhancer segment overlaps with left flanking CTCF segment
+4 – enhancer segment is contained within CTCF segment but spans beyond right boundary of CTCF
+5 – CTCF segment overlaps with left flanking enhancer segment
+6 – CTCF segment contained in enhancer segment but spans beyond right boundary of enhancer
+
+
+
+Sub overlap()
+Dim rs(30000) As Double
+Dim re(30000) As Double
+Dim es(30000) As Double
+Dim ee(30000) As Double
+Dim rv(30000) As String
+Dim ev(30000) As String
+
+
+n_regions = 23
+ridx = 1
+eidx = 1
+oidx = 0
+For ii = 1 To n_regions
+' number CTCF
+gene = Worksheets("totals").Cells(ii + 1, 1)
+Vname = Worksheets("totals").Cells(ii + 1, 2)
+r_n = Worksheets("totals").Cells(ii + 1, 3)
+' number enhancers
+e_n = Worksheets("totals").Cells(ii + 1, 4)
+
+' read the CTCF
+For ri = 1 To r_n
+    ridx = ridx + 1
+
+    rv(ri) = Worksheets("CTCF_output").Cells(ridx, 2)
+    rs(ri) = Worksheets("CTCF_output").Cells(ridx, 4)
+    re(ri) = Worksheets("CTCF_output").Cells(ridx, 5)
+    Next
+'read the enhancers
+For ei = 1 To e_n
+    eidx = eidx + 1
+    
+    ev(ei) = Worksheets("enhancers_output").Cells(eidx, 2)
+    es(ei) = Worksheets("enhancers_output").Cells(eidx, 4)
+    ee(ei) = Worksheets("enhancers_output").Cells(eidx, 5)
+    Next
+
+    
+ For i = 1 To r_n
+        For j = 1 To e_n
+                    ' e segment completely contained in r segment
+                    If (es(j) >= rs(i)) And (ee(j) <= re(i)) Then
+                    reg_s = rs(i)
+                    reg_e = re(i)
+                    enc_s = es(j)
+                    enc_e = ee(j)
+                    olp = 1
+                    oidx = oidx + 1
+                    Worksheets("fini").Cells(oidx, 1) = gene
+                    Worksheets("fini").Cells(oidx, 2) = Vname
+                    Worksheets("fini").Cells(oidx, 3) = reg_s
+                    Worksheets("fini").Cells(oidx, 4) = reg_e
+                    Worksheets("fini").Cells(oidx, 5) = enc_s
+                    Worksheets("fini").Cells(oidx, 6) = enc_e
+                    Worksheets("fini").Cells(oidx, 7) = olp
+                    End If
+                    
+                    ' r segment completely contained in e segment
+                    If (rs(i) >= es(j)) And (re(i) <= ee(j)) Then
+                    reg_s = rs(i)
+                    reg_e = re(i)
+                    enc_s = es(j)
+                    enc_e = ee(j)
+                    olp = 2
+                    oidx = oidx + 1
+                    Worksheets("fini").Cells(oidx, 1) = gene
+                    Worksheets("fini").Cells(oidx, 2) = Vname
+                    Worksheets("fini").Cells(oidx, 3) = reg_s
+                    Worksheets("fini").Cells(oidx, 4) = reg_e
+                    Worksheets("fini").Cells(oidx, 5) = enc_s
+                    Worksheets("fini").Cells(oidx, 6) = enc_e
+                    Worksheets("fini").Cells(oidx, 7) = olp
+                    End If
+                    
+                    ' e segment olps with left flanking r segment
+                    If (es(j) <= rs(i)) And (ee(j) >= rs(i)) Then
+                    reg_s = rs(i)
+                    reg_e = re(i)
+                    enc_s = es(j)
+                    enc_e = ee(j)
+                    olp = 3
+                    oidx = oidx + 1
+                    Worksheets("fini").Cells(oidx, 1) = gene
+                    Worksheets("fini").Cells(oidx, 2) = Vname
+                    Worksheets("fini").Cells(oidx, 3) = reg_s
+                    Worksheets("fini").Cells(oidx, 4) = reg_e
+                    Worksheets("fini").Cells(oidx, 5) = enc_s
+                    Worksheets("fini").Cells(oidx, 6) = enc_e
+                    Worksheets("fini").Cells(oidx, 7) = olp
+                    End If
+
+                    ' e segment contained in r segment but spans beyond right side of r segment
+                    If (es(j) >= rs(i)) And (es(j) <= re(i)) And (ee(j) >= re(i)) Then
+                    reg_s = rs(i)
+                    reg_e = re(i)
+                    enc_s = es(j)
+                    enc_e = ee(j)
+                    olp = 4
+                    oidx = oidx + 1
+                    Worksheets("fini").Cells(oidx, 1) = gene
+                    Worksheets("fini").Cells(oidx, 2) = Vname
+                    Worksheets("fini").Cells(oidx, 3) = reg_s
+                    Worksheets("fini").Cells(oidx, 4) = reg_e
+                    Worksheets("fini").Cells(oidx, 5) = enc_s
+                    Worksheets("fini").Cells(oidx, 6) = enc_e
+                    Worksheets("fini").Cells(oidx, 7) = olp
+                    End If
+
+                    ' r segement olps with left flanking e segment
+                    If (rs(i) <= es(j)) And (re(i) >= es(j)) Then
+                    reg_s = rs(i)
+                    reg_e = re(i)
+                    enc_s = es(j)
+                    enc_e = ee(j)
+                    olp = 5
+                    oidx = oidx + 1
+                    Worksheets("fini").Cells(oidx, 1) = gene
+                    Worksheets("fini").Cells(oidx, 2) = Vname
+                    Worksheets("fini").Cells(oidx, 3) = reg_s
+                    Worksheets("fini").Cells(oidx, 4) = reg_e
+                    Worksheets("fini").Cells(oidx, 5) = enc_s
+                    Worksheets("fini").Cells(oidx, 6) = enc_e
+                    Worksheets("fini").Cells(oidx, 7) = olp
+                    End If
+
+                    ' r segment contained in e segment but spans beyond right side of e segment
+                    If (rs(i) >= es(j)) And (rs(i) <= ee(j)) And (re(i) >= ee(j)) Then
+                    reg_s = rs(i)
+                    reg_e = re(i)
+                    enc_s = es(j)
+                    enc_e = ee(j)
+                    olp = 6
+                    oidx = oidx + 1
+                    Worksheets("fini").Cells(oidx, 1) = gene
+                    Worksheets("fini").Cells(oidx, 2) = Vname
+                    Worksheets("fini").Cells(oidx, 3) = reg_s
+                    Worksheets("fini").Cells(oidx, 4) = reg_e
+                    Worksheets("fini").Cells(oidx, 5) = enc_s
+                    Worksheets("fini").Cells(oidx, 6) = enc_e
+                    Worksheets("fini").Cells(oidx, 7) = olp
+                    End If
+                Next
+        Next
+    
+Next
+End Sub
+
+Code to determine if CTCF site is within the genomic region of interest (sub ctcf_check)
+
+ Input Tables: adjusted regions (for each variant/gene, genomic coordinates of region of interest), CTCF input (genomic coordinates for the CTCF binding factors)
+
+Output Tables: CTCF_output (genomic coordinates for CTCF binding factors within the genomic regions of interest
+
+Sub ctcf_check()
+n_reg = 23
+n_ctcf = 183275
+odx = 1
+For reg = 1 To n_reg
+    reg_row = reg + 1
+    reg_chr = Worksheets("adjusted_regions").Cells(reg_row, 3)
+    reg_start = Worksheets("adjusted_regions").Cells(reg_row, 4)
+    reg_end = Worksheets("adjusted_regions").Cells(reg_row, 5)
+    
+    For ctcf = 1 To n_ctcf
+        ctcf_row = ctcf + 1
+        ctcf_chr = Worksheets("ctcf_input").Cells(ctcf_row, 1)
+        ctcf_start = Worksheets("ctcf_input").Cells(ctcf_row, 2)
+        ctcf_end = Worksheets("ctcf_input").Cells(ctcf_row, 3)
+        
+        If reg_chr = ctcf_chr Then
+                If ctcf_start >= reg_start And ctcf_end <= reg_end Then
+                odx = odx + 1
+                Worksheets("CTCF_output").Cells(odx, 1) = Worksheets("adjusted_regions").Cells(reg_row, 1)
+                Worksheets("CTCF_output").Cells(odx, 2) = Worksheets("adjusted_regions").Cells(reg_row, 2)
+                Worksheets("CTCF_output").Cells(odx, 3) = reg_chr
+                    For j = 2 To 6
+                        Worksheets("CTCF_output").Cells(odx, j + 2) = Worksheets("CTCF_input").Cells(ctcf_row, j)
+                        Next
+                End If
+        End If
+    
+    Next
+Next
+
+End Sub
+Code to determine if enhancer site is within the genomic region of interest (sub ench_check)
+
+ Input Tables: adjusted regions (for each variant/gene, genomic coordinates of region of interest), enhancers_ input (genomic coordinates for the enhancers), enhancers output (enhancer regions within genomic regions of interest), 
+
+Output Tables: enhancer_output (genomic coordinates for enhancers within the genomic regions of interest
+
+Sub ench_check()
+n_reg = 23
+n_ench = 117942
+odx = 1
+
+For reg = 1 To n_reg
+    reg_row = reg + 1
+    reg_chr = Worksheets("adjusted_regions").Cells(reg_row, 3)
+    reg_start = Worksheets("adjusted_regions").Cells(reg_row, 4)
+    reg_end = Worksheets("adjusted_regions").Cells(reg_row, 5)
+    
+    For ench = 1 To n_ench
+        ench_row = ench + 1
+        ench_chr = Worksheets("enhancers_input").Cells(ench_row, 1)
+        ench_start = Worksheets("enhancers_input").Cells(ench_row, 2)
+        ench_end = Worksheets("enhancers_input").Cells(ench_row, 3)
+        
+        If reg_chr = ench_chr Then
+                If ench_start >= reg_start And ench_end <= reg_end Then
+                odx = odx + 1
+                Worksheets("out2").Cells(odx, 1) = Worksheets("adjusted_regions").Cells(reg_row, 1)
+                Worksheets("out2").Cells(odx, 2) = Worksheets("adjusted_regions").Cells(reg_row, 2)
+                Worksheets("out2").Cells(odx, 3) = reg_chr
+                Worksheets("out2").Cells(odx, 4) = ench_start
+                Worksheets("out2").Cells(odx, 5) = ench_end
+                Worksheets("out2").Cells(odx, 6) = Worksheets("enhancers_input").Cells(ench_row, 4)
+                
+                End If
+        End If
+    
+    Next
+Next
+
+
+End Sub
+
+
+Code to construct adjusted genomic regions for all calculations (sub process_data)
+
+ Input Tables: genes (expanded listing of genes to process), regions (listing of GWAS regions to process) 
+Output Tables: output (listing of the adjusted genomic regions for analysis)
+
+
+Sub process_data()
+Dim buff As String
+Dim seq As String
+Dim subj As String
+Dim snp As String
+Dim cnflag As String
+Dim miss_count As Integer
+Dim ctr As Integer
+Dim total As Integer
+
+ngenes = 493
+nregions = 23
+odx = 1
+
+For igene = 1 To ngenes
+    generow = igene + 1
+    
+    For jregion = 1 To nregions
+    
+        regionrow = jregion + 1
+        
+            gene_chr = Worksheets("genes").Cells(generow, 4)
+            gene_start = Worksheets("genes").Cells(generow, 6)
+            gene_end = Worksheets("genes").Cells(generow, 7)
+            
+            region_chr = Worksheets("regions").Cells(regionrow, 3)
+            region_start = Worksheets("regions").Cells(regionrow, 5)
+            region_end = Worksheets("regions").Cells(regionrow, 6)
+            
+            If gene_chr = region_chr Then
+                If gene_start >= region_start And gene_end <= region_end Then
+                    odx = odx + 1
+                    Worksheets("output").Cells(odx, 1) = Worksheets("regions").Cells(regionrow, 1)
+                    Worksheets("output").Cells(odx, 2) = Worksheets("regions").Cells(regionrow, 2)
+                    Worksheets("output").Cells(odx, 3) = gene_chr
+                    Worksheets("output").Cells(odx, 4) = Worksheets("genes").Cells(generow, 14)
+                    Worksheets("output").Cells(odx, 5) = generow
+                    Worksheets("output").Cells(odx, 6) = regionrow
+                    Worksheets("output").Cells(odx, 7) = gene_start
+                    Worksheets("output").Cells(odx, 8) = gene_end
+                    Worksheets("output").Cells(odx, 9) = region_start
+                    Worksheets("output").Cells(odx, 10) = region_end
+                    End If
+                End If
+                
+           Next
+        Next
+        
+End Sub
